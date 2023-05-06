@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import praw
 from kafka import KafkaProducer
@@ -9,6 +10,7 @@ config_file_path = os.path.abspath("../config/scraper_config.yaml")
 with open('config/scraper_config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
+# TODO: error handling
 
 def process_comment(comment, new_post):
     #print(comment.body)
@@ -48,13 +50,14 @@ def process_subreddit_client_comments(reddit_client:praw.Reddit, subject:str, po
 
 def send_post_to_kafka(posts:list):
     logging.info('Sending messages to kafka...')
-    with KafkaProducer(bootstrap_servers=config['kafka']['server']) as producer:
-        producer.send(config['kafka']['topic_name'], json.dumps(posts).encode('utf-8')).get(timeout=10)
-        producer.flush()
+    producer = KafkaProducer(bootstrap_servers=config['kafka']['server'])
+    producer.send(config['kafka']['topic_name'], json.dumps(posts).encode('utf-8')).get(timeout=10)
+    producer.flush()
 
 
 def main():
-    logging.info('Starting job...')
+    start_time = datetime.now()
+    logging.info(start_time.ctime() + ' - Starting job...')
     # 'reddit' object from praw (reddit_client API)
     reddit_client = praw.Reddit(client_id=config['reddit_api']['client_id'], client_secret=config['reddit_api']['client_secret'], 
                                 user_agent=config['reddit_api']['user_agent'], check_for_async=False)
@@ -68,6 +71,10 @@ def main():
         logging.info('Finished reading from ' + subject)
 
     send_post_to_kafka(posts)
+
+    end_time = datetime.now()
+    processing_time = end_time - start_time
+    logging.info(end_time.ctime() + ' - Job ended. Process took ' + str(processing_time.seconds) + ' seconds.')
 
 
 if __name__ == '__main__':

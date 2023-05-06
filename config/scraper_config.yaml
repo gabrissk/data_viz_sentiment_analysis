@@ -4,4 +4,4 @@ reddit_api:
   user_agent: gabrissk
 kafka:
   server: localhost:9092
-  topic_name: reddit_client-dataviz-comments
+  topic_name: reddit-dataviz-comments
