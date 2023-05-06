@@ -1,0 +1,7 @@
+reddit_api:
+  client_id: yQ83iAt0TWpfgiW07sTkOw
+  client_secret: q9na4iAgw25R8yBgLIDiNVaMwSp7EQ
+  user_agent: gabrissk
+kafka:
+  server: localhost:9092
+  topic_name: reddit_client-dataviz-comments
