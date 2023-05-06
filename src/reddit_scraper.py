@@ -6,10 +6,9 @@ import yaml
 
 import os
 config_file_path = os.path.abspath("../config/scraper_config.yaml")
-
-
 with open('config/scraper_config.yaml', 'r') as f:
     config = yaml.safe_load(f)
+
 
 def process_comment(comment, new_post):
     #print(comment.body)
@@ -38,6 +37,7 @@ def process_subreddit_client_comments(reddit_client:praw.Reddit, subject:str, po
             "subject": subject,
             "comments": []
         }
+        # get full comments list, instead of reply references
         post.comments.replace_more()
         for comment in post.comments:
             process_comment(comment, new_post)
@@ -49,14 +49,13 @@ def process_subreddit_client_comments(reddit_client:praw.Reddit, subject:str, po
 def send_post_to_kafka(posts:list):
     logging.info('Sending messages to kafka...')
     with KafkaProducer(bootstrap_servers=config['kafka']['server']) as producer:
-        # post_dict = vars(posts)
         producer.send(config['kafka']['topic_name'], json.dumps(posts).encode('utf-8')).get(timeout=10)
         producer.flush()
 
 
 def main():
     logging.info('Starting job...')
-    # 'reddit' object from the praw  reddit_client API
+    # 'reddit' object from praw (reddit_client API)
     reddit_client = praw.Reddit(client_id=config['reddit_api']['client_id'], client_secret=config['reddit_api']['client_secret'], 
                                 user_agent=config['reddit_api']['user_agent'], check_for_async=False)
     # subreddit_clients to search
