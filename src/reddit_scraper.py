@@ -18,7 +18,7 @@ def process_comment(comment, new_post):
         {
             "id": comment.id, 
             "text": comment.body, 
-            "creation_date": comment.created_utc
+            "creation_date": datetime.utcfromtimestamp(int(comment.created_utc)).strftime('%Y-%m-%d %H:%M:%S')
         }
     )
 
@@ -27,33 +27,49 @@ def process_comment(comment, new_post):
 
 
 def process_subreddit_client_comments(reddit_client:praw.Reddit, subject:str, posts:list, posts_limit:int=10):
-    subreddit_client = reddit_client.subreddit(subject)
-    for post in subreddit_client.new(limit=posts_limit):
+    subreddit = reddit_client.subreddit(subject)
+    for post in subreddit.new(limit=posts_limit):
         # print(post.title)
         # print(post.selftext)
         # print(post.created_utc)
         new_post = {
             "id": post.id, 
             "title": post.title, 
-            "creation_date": post.created_utc,
+            "creation_date": datetime.utcfromtimestamp(int(post.created_utc)).strftime('%Y-%m-%d %H:%M:%S'),
             "subject": subject,
             "comments": []
         }
+
+        if (post.comments.__len__() <= 0):
+            new_post["comments"].append(
+                {
+                    "id": post.id + '-99999', 
+                    "text": 'No Comments', 
+                    "creation_date": datetime.utcfromtimestamp(int(post.created_utc)).strftime('%Y-%m-%d %H:%M:%S')
+                }
+            )
         # get full comments list, instead of reply references
         post.comments.replace_more()
         for comment in post.comments:
             process_comment(comment, new_post)
                 
-        # send_post_to_kafka(new_post)
+        send_post_to_kafka(new_post)
         posts.append(new_post)
+        print(new_post)
 
 
-def send_post_to_kafka(posts:list):
+def send_posts_to_kafka(posts:list):
     logging.info('Sending messages to kafka...')
     producer = KafkaProducer(bootstrap_servers=config['kafka']['server'])
     producer.send(config['kafka']['topic_name'], json.dumps(posts).encode('utf-8')).get(timeout=10)
     producer.flush()
 
+def send_post_to_kafka(post):
+    logging.info('Sending messages to kafka...')
+    producer = KafkaProducer(bootstrap_servers=config['kafka']['server'])
+    producer.send(topic=config['kafka']['topic_name'], value=json.dumps(post).encode('utf-8'), key=post["subject"].encode('utf-8')).get(timeout=10)
+    producer.flush()
+    producer.close()
 
 def main():
     start_time = datetime.now()
@@ -67,10 +83,10 @@ def main():
     posts = []
 
     for subject in subjects:
-        process_subreddit_client_comments(reddit_client, subject, posts, 10)
+        process_subreddit_client_comments(reddit_client, subject, posts, 15)
         logging.info('Finished reading from ' + subject)
 
-    send_post_to_kafka(posts)
+    # send_posts_to_kafka(posts)
 
     end_time = datetime.now()
     processing_time = end_time - start_time
