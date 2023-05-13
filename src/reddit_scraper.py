@@ -83,7 +83,7 @@ def main():
     posts = []
 
     for subject in subjects:
-        process_subreddit_client_comments(reddit_client, subject, posts, 15)
+        process_subreddit_client_comments(reddit_client, subject, posts, 50)
         logging.info('Finished reading from ' + subject)
 
     # send_posts_to_kafka(posts)
