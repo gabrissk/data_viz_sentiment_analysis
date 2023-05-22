@@ -1,3 +1,6 @@
 */__pycache__/*
 */config/*
 config/scraper_config.yaml
+checkpoints/*
+*/comments/*
+reddit-data-viz-comments/*
