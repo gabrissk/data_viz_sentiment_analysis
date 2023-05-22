@@ -1,12 +1,12 @@
 reddit_api:
-  client_id: yQ83iAt0TWpfgiW07sTkOw
-  client_secret: q9na4iAgw25R8yBgLIDiNVaMwSp7EQ
+  client_id: <>
+  client_secret: <>
   user_agent: gabrissk
 kafka:
   server: localhost:9092
   comments_topic: reddit-comments
   posts_topic: reddit-posts
 s3:
-  access_key: AKIAWK7TRGWZ6QIDCXEZ
-  secret_key: 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
+  access_key: <>
+  secret_key: <>
   output_path: reddit-data-viz-comments/reddit-api-data/
